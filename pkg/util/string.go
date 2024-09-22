@@ -4,28 +4,29 @@ import (
 	"math/rand"
 )
 
+const hexCharBytes = "0123456789ABCDEF" // Possible charaters that a Hex string may contain
+
 var randx = rand.NewSource(42)
 
-// RandString returns a random string of length n.
+// RandString returns a random hex string of length n.
 func RandString(n int) string {
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	const (
-		letterIdxBits = 6                    // 6 bits to represent a letter index
-		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+		hexCharIdxBits = 4                     // 4 bits to represent a Hex character index (16 values total)
+		hexCharIdxMask = 1<<hexCharIdxBits - 1 // All 1-bits, as many as hexCharIdxBits
+		hexCharIdxMax  = 63 / hexCharIdxBits   // # of hex char indices fitting in 63 bits
 	)
 
 	b := make([]byte, n)
-	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
-	for i, cache, remain := n-1, randx.Int63(), letterIdxMax; i >= 0; {
+	// A rand.Int63() generates 63 random bits, enough for hexCharIdxMax characters!
+	for i, cache, remain := n-1, randx.Int63(), hexCharIdxMax; i >= 0; {
 		if remain == 0 {
-			cache, remain = randx.Int63(), letterIdxMax
+			cache, remain = randx.Int63(), hexCharIdxMax
 		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
+		if idx := int(cache & hexCharIdxMask); idx < len(hexCharBytes) {
+			b[i] = hexCharBytes[idx]
 			i--
 		}
-		cache >>= letterIdxBits
+		cache >>= hexCharIdxBits
 		remain--
 	}
 
