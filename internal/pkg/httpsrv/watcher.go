@@ -21,6 +21,8 @@ func (s *Server) removeWatcher(w *watcher.Watcher) {
 	}
 	// Remove watcher.
 	delete(s.watchers, w.GetWatcherId())
+	w.Reset()
+	s.watcherPool.Put(w)
 }
 
 func (s *Server) notifyWatchers(str string) {

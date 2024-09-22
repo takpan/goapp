@@ -53,3 +53,10 @@ func (w *Watcher) ResetCounter() {
 		return
 	}
 }
+
+func (w *Watcher) Reset() {
+	w.id = uuid.NewString()
+	w.counter.Iteration = 0
+	w.outCh = make(chan *Counter, 1)
+	w.quitChannel = make(chan struct{})
+}

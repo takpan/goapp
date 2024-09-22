@@ -17,6 +17,7 @@ import (
 type Server struct {
 	strChan      <-chan string               // String channel.
 	server       *http.Server                // Gorilla HTTP server.
+	watcherPool  *sync.Pool                  // Pool for Watcher objects
 	watchers     map[string]*watcher.Watcher // Counter watchers (k: counterId).
 	watchersLock *sync.RWMutex               // Counter lock.
 	sessionStats []*sessionStats             // Session stats.
@@ -33,6 +34,11 @@ func New(strChan <-chan string) *Server {
 	s.sessionStats = []*sessionStats{}
 	s.quitChannel = make(chan struct{})
 	s.running = sync.WaitGroup{}
+	s.watcherPool = &sync.Pool{
+		New: func() interface{} {
+			return watcher.New()
+		},
+	}
 	return &s
 }
 

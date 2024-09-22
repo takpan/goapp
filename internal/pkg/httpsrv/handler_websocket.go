@@ -13,7 +13,7 @@ import (
 
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Create and start a watcher.
-	var watch = watcher.New()
+	var watch = s.watcherPool.Get().(*watcher.Watcher)
 
 	s.addWatcher(watch)
 	defer s.removeWatcher(watch)
