@@ -38,7 +38,7 @@ func TestRandString(t *testing.T) {
 	for _, tc := range randStringTests {
 		t.Run(tc.name, func(t *testing.T) {
 			s := RandString(tc.strLen)
-			assert.Equal(t, len(s), tc.strLen, "Expected string length to be %d, but got %d", tc.strLen, len(s))
+			assert.Equal(t, tc.strLen, len(s), "Expected string length to be %d, but got %d", tc.strLen, len(s))
 			assert.True(t, isStrValid(s, hexCharBytes), "Generated string contains invalid characters")
 		})
 	}

@@ -32,6 +32,6 @@ func TestIncStats(t *testing.T) {
 	}
 
 	// Assert that the sent counts are correct
-	assert.Equal(t, server.sessionStats[0].sent, 5, "Expected 5 'sent' for watcherId1, got %d", server.sessionStats[0].sent)
-	assert.Equal(t, server.sessionStats[1].sent, 8, "Expected 8 'sent' for watcherId1, got %d", server.sessionStats[1].sent)
+	assert.Equal(t, 5, server.sessionStats[0].sent, "Expected 5 'sent' for watcherId1, got %d", server.sessionStats[0].sent)
+	assert.Equal(t, 8, server.sessionStats[1].sent, "Expected 8 'sent' for watcherId1, got %d", server.sessionStats[1].sent)
 }
