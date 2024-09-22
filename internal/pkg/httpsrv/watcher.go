@@ -28,8 +28,8 @@ func (s *Server) notifyWatchers(str string) {
 	defer s.watchersLock.RUnlock()
 
 	// Send message to all watchers and increment stats.
-	for id := range s.watchers {
-		s.watchers[id].Send(str)
+	for id, w := range s.watchers {
+		w.Send(str)
 		s.incStats(id)
 	}
 }

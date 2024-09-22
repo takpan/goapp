@@ -14,11 +14,6 @@ import (
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Create and start a watcher.
 	var watch = watcher.New()
-	if err := watch.Start(); err != nil {
-		s.error(w, http.StatusInternalServerError, fmt.Errorf("failed to start watcher: %w", err))
-		return
-	}
-	defer watch.Stop()
 
 	s.addWatcher(watch)
 	defer s.removeWatcher(watch)
