@@ -12,6 +12,33 @@ import (
 )
 
 func (s *Server) handlerWebSocket(w http.ResponseWriter, r *http.Request) {
+	// Check the CSRF token only if the request is non-CLI
+	isCliReq := r.URL.Query().Get("cli")
+	if isCliReq != "true" {
+		// Get session based on the received request
+		session, err := s.cookieStore.Get(r, "ws-session")
+		if err != nil {
+			http.Error(w, "Unable to retrieve session", http.StatusInternalServerError)
+			return
+		}
+
+		// Get the CSRF token from the session
+		csrfTokenSession, ok := session.Values["csfr_token"].(string)
+		if !ok || csrfTokenSession == "" {
+			http.Error(w, "Missing CSRF token", http.StatusForbidden)
+			return
+		}
+
+		// Get the CSRF token from the query parameter
+		csrfTokenQueryParam := r.URL.Query().Get("csrf_token")
+
+		// Compare the tokens
+		if csrfTokenSession != csrfTokenQueryParam {
+			http.Error(w, "Invalid CSRF token", http.StatusForbidden)
+			return
+		}
+	}
+
 	// Create and start a watcher.
 	var watch = s.watcherPool.Get().(*watcher.Watcher)
 

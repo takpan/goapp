@@ -38,6 +38,11 @@ func main() {
 		Path:   *path,
 	}
 
+	// Add a CLI query parameter to identify the origin of the request in the websocket handler
+	query := wsUrl.Query()
+	query.Set("cli", "true")
+	wsUrl.RawQuery = query.Encode()
+
 	var wg sync.WaitGroup
 
 	// Start n concurrent websocket connections

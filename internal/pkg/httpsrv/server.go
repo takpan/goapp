@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"goapp/internal/pkg/watcher"
+	"goapp/pkg/util"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 )
 
 type Server struct {
@@ -20,9 +22,10 @@ type Server struct {
 	watcherPool  *sync.Pool                  // Pool for Watcher objects
 	watchers     map[string]*watcher.Watcher // Counter watchers (k: counterId).
 	watchersLock *sync.RWMutex               // Counter lock.
-	sessionStats []*sessionStats             // Session stats.
-	quitChannel  chan struct{}               // Quit channel.
-	running      sync.WaitGroup              // Running goroutines.
+	cookieStore  *sessions.CookieStore
+	sessionStats []*sessionStats // Session stats.
+	quitChannel  chan struct{}   // Quit channel.
+	running      sync.WaitGroup  // Running goroutines.
 }
 
 func New(strChan <-chan string) *Server {
@@ -39,6 +42,11 @@ func New(strChan <-chan string) *Server {
 			return watcher.New()
 		},
 	}
+	key, err := util.GenerateKey(32)
+	if err != nil {
+		return nil
+	}
+	s.cookieStore = sessions.NewCookieStore([]byte(key))
 	return &s
 }
 

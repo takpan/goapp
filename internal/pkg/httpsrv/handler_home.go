@@ -1,12 +1,52 @@
 package httpsrv
 
 import (
+	"goapp/pkg/util"
 	"html/template"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
 
+const wsPath = "/goapp/ws"
+
+type TemplateData struct {
+	WsUrl     string
+	CSRFToken template.HTML
+}
+
 func (s *Server) handlerHome(w http.ResponseWriter, r *http.Request) {
-	template.Must(template.New("").Parse(`
+	// Create new session
+	session, err := s.cookieStore.Get(r, "ws-session")
+	if err != nil {
+		http.Error(w, "Unable to retrieve session", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate a CSRF token
+	csrfToken, err := util.GenerateKey(32)
+	if err != nil {
+		http.Error(w, "Error generating CSRF token", http.StatusInternalServerError)
+		return
+	}
+
+	// Set session options
+	session.Options = &sessions.Options{
+		Path:     wsPath,
+		MaxAge:   1800, // 30 min
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}
+
+	// Store the CSRF token in the session cookie
+	session.Values["csfr_token"] = csrfToken
+	if err = session.Save(r, w); err != nil {
+		http.Error(w, "Error saving session", http.StatusInternalServerError)
+		return
+	}
+
+	tmpl := template.Must(template.New("").Parse(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -26,7 +66,7 @@ window.addEventListener("load", function(evt) {
         if (ws) {
             return false;
         }
-        ws = new WebSocket("{{.}}");
+        ws = new WebSocket("{{ .WsUrl }}?csrf_token=" + encodeURIComponent({{ .CSRFToken }}));
         ws.onopen = function(evt) {
             print("OPEN");
         }
@@ -78,5 +118,12 @@ You can change the message and send multiple times.
 </td></tr></table>
 </body>
 </html>
-`)).Execute(w, "ws://"+r.Host+"/goapp/ws")
+`))
+
+	data := TemplateData{
+		WsUrl:     "ws://" + r.Host + wsPath,
+		CSRFToken: template.HTML(csrfToken),
+	}
+
+	tmpl.Execute(w, data)
 }
