@@ -11,7 +11,6 @@ type Watcher struct {
 	outCh       chan *Counter // Updates to counter will notify this channel.
 	counter     *Counter      // The counter.
 	counterLock *sync.RWMutex // Lock for counter.
-	quitChannel chan struct{} // Quit.
 }
 
 func New() *Watcher {
@@ -20,15 +19,7 @@ func New() *Watcher {
 	w.outCh = make(chan *Counter, 1)
 	w.counter = &Counter{Iteration: 0}
 	w.counterLock = &sync.RWMutex{}
-	w.quitChannel = make(chan struct{})
 	return &w
-}
-
-func (w *Watcher) Stop() {
-	w.counterLock.Lock()
-	defer w.counterLock.Unlock()
-
-	close(w.quitChannel)
 }
 
 func (w *Watcher) GetWatcherId() string { return w.id }
@@ -46,17 +37,11 @@ func (w *Watcher) ResetCounter() {
 	defer w.counterLock.Unlock()
 
 	w.counter.Iteration = 0
-
-	select {
-	case w.outCh <- w.counter:
-	case <-w.quitChannel:
-		return
-	}
+	w.outCh <- w.counter
 }
 
 func (w *Watcher) Reset() {
 	w.id = uuid.NewString()
 	w.counter.Iteration = 0
 	w.outCh = make(chan *Counter, 1)
-	w.quitChannel = make(chan struct{})
 }
